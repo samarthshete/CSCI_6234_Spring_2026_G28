@@ -1,0 +1,112 @@
+@startuml activity_diagram
+title Transaction Categorization Flow\n(Chain of Responsibility Pattern)
+
+skinparam activity {
+    BackgroundColor LightYellow
+    BorderColor DarkSlateGray
+    DiamondBackgroundColor LightBlue
+}
+
+|#LightBlue|User|
+|#LightGreen|System|
+|#LightCoral|Rules Engine|
+|#Plum|AI Service|
+
+|User|
+start
+:Upload/Import Transactions;
+
+|System|
+:Receive Transaction Data;
+:Validate Transaction Format;
+
+if (Valid Format?) then (yes)
+    :Parse Transaction Details;
+    :Create Transaction Object;
+    :Store Raw Transaction;
+else (no)
+    :Log Validation Error;
+    |User|
+    :Display Error Message;
+    stop
+endif
+
+|System|
+:Initialize Categorization Chain;
+
+|Rules Engine|
+:Apply Keyword Rules;
+
+if (Keyword Match?) then (yes)
+    :Assign Category;
+    :Confidence = HIGH;
+else (no)
+    :Apply Merchant Rules;
+    
+    if (Merchant Match?) then (yes)
+        :Assign Category;
+        :Confidence = HIGH;
+    else (no)
+        :Apply Amount Range Rules;
+        
+        if (Amount Match?) then (yes)
+            :Assign Category;
+            :Confidence = MEDIUM;
+        else (no)
+            |AI Service|
+            :Invoke LLM Categorization;
+            :Analyze Description;
+            :Generate Prediction;
+            
+            if (AI Confidence > 70%?) then (yes)
+                :Assign AI Category;
+                :Confidence = MEDIUM;
+            else (no)
+                |User|
+                :Prompt Manual Selection;
+                :Select Category;
+                |System|
+                :Assign User Category;
+                :Confidence = USER_VERIFIED;
+                
+                if (Create New Rule?) then (yes)
+                    :Save Categorization Rule;
+                else (no)
+                endif
+            endif
+        endif
+    endif
+endif
+
+|System|
+:Log Categorization Method;
+:Update Transaction;
+:Save to Database;
+
+:Notify Budget Observer;
+:Check Budget Thresholds;
+
+if (Threshold Exceeded?) then (yes)
+    :Create Budget Alert;
+    :Send Notification;
+    |User|
+    :Receive Alert;
+else (no)
+endif
+
+|System|
+:Update Analytics Cache;
+
+|User|
+:View Categorized Transaction;
+stop
+
+legend right
+    |= Pattern |= Usage |
+    | Chain of Responsibility | Categorization fallback |
+    | Strategy | Pluggable rules |
+    | Observer | Budget monitoring |
+    | Factory | Transaction creation |
+endlegend
+
+@enduml

@@ -1,0 +1,142 @@
+@startuml sequence_diagram
+title Transaction Import & Categorization\nSequence Diagram
+
+skinparam participant {
+    BackgroundColor LightYellow
+    BorderColor DarkSlateGray
+}
+
+actor User as user
+participant "API Gateway" as api #LightBlue
+participant "TransactionService" as txnSvc #LightGreen
+participant "BankAdapter" as bankAdapter #Wheat
+participant "CategorizationChain" as categChain #Plum
+participant "RulesEngine" as rules #Pink
+participant "LLMAdapter" as llm #Wheat
+participant "TransactionRepo" as repo #LightGreen
+participant "BudgetObserver" as observer #LightCoral
+participant "AlertFactory" as factory #LightGray
+participant "NotificationService" as notif #LightSkyBlue
+database "PostgreSQL" as db #LightBlue
+
+' ============================================================================
+' IMPORT FLOW
+' ============================================================================
+user -> api : POST /transactions/import
+activate api
+
+api -> txnSvc : importTransactions(accountId)
+activate txnSvc
+
+' Adapter Pattern
+group Adapter Pattern
+    txnSvc -> bankAdapter : fetchTransactions()
+    activate bankAdapter
+    bankAdapter -> bankAdapter : normalizeData()
+    bankAdapter --> txnSvc : List<TransactionDTO>
+    deactivate bankAdapter
+end
+
+' ============================================================================
+' CATEGORIZATION FLOW
+' ============================================================================
+loop for each transaction
+
+    ' Factory Pattern
+    txnSvc -> txnSvc : createTransaction(dto)
+    
+    ' Chain of Responsibility
+    group Chain of Responsibility
+        txnSvc -> categChain : categorize(transaction)
+        activate categChain
+        
+        categChain -> rules : tryKeywordMatch()
+        activate rules
+        
+        alt Keyword Match Found
+            rules --> categChain : category (HIGH)
+        else No Match - Try Merchant
+            rules -> rules : tryMerchantMatch()
+            alt Merchant Match Found
+                rules --> categChain : category (HIGH)
+            else No Match - Try AI
+                rules --> categChain : null
+                deactivate rules
+                
+                ' AI Fallback
+                categChain -> llm : classify(description)
+                activate llm
+                llm -> llm : callLLMAPI()
+                
+                alt AI Confidence > 70%
+                    llm --> categChain : category (MEDIUM)
+                else Low Confidence
+                    llm --> categChain : UNCATEGORIZED
+                    categChain --> txnSvc : requiresManual
+                    txnSvc --> api : needsInput
+                    api --> user : selectCategory
+                    user -> api : selectedCategory
+                    api -> txnSvc : manualCategory
+                end
+                deactivate llm
+            end
+        end
+        
+        categChain --> txnSvc : CategoryResult
+        deactivate categChain
+    end
+    
+    ' Repository Pattern
+    group Repository Pattern
+        txnSvc -> repo : save(transaction)
+        activate repo
+        repo -> db : INSERT
+        db --> repo : id
+        repo --> txnSvc : savedTransaction
+        deactivate repo
+    end
+    
+    ' Observer Pattern
+    group Observer Pattern
+        txnSvc -> observer : notify(TransactionCreated)
+        activate observer
+        
+        observer -> observer : checkBudget()
+        
+        alt Threshold Exceeded
+            observer -> factory : createAlert()
+            activate factory
+            factory --> observer : BudgetAlert
+            deactivate factory
+            
+            observer -> notif : sendAlert(alert)
+            activate notif
+            notif --> user : notification
+            deactivate notif
+        end
+        
+        observer --> txnSvc : done
+        deactivate observer
+    end
+end
+
+txnSvc --> api : ImportResult
+deactivate txnSvc
+
+api --> user : 200 OK {imported: 15}
+deactivate api
+
+' ============================================================================
+' LEGEND
+' ============================================================================
+legend bottom
+    |= Pattern |= Implementation |
+    | Adapter | BankAdapter, LLMAdapter |
+    | Chain of Responsibility | CategorizationChain |
+    | Strategy | RulesEngine |
+    | Observer | BudgetObserver |
+    | Factory | AlertFactory |
+    | Repository | TransactionRepo |
+endlegend
+
+@enduml

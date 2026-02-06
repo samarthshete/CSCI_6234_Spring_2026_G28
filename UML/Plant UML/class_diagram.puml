@@ -1,0 +1,319 @@
+@startuml class_diagram
+title Intelligent Personal Finance Management System\nClass Diagram
+
+skinparam class {
+    BackgroundColor LightYellow
+    BorderColor DarkSlateGray
+    ArrowColor DarkSlateGray
+}
+
+' ============================================================================
+' DOMAIN ENTITIES
+' ============================================================================
+package "Domain Entities" #EEEEEE {
+    
+    class User {
+        - userId: UUID
+        - email: String
+        - passwordHash: String
+        - name: String
+        - createdAt: DateTime
+        + authenticate(password): Boolean
+        + getAccounts(): List<Account>
+    }
+    
+    class Account {
+        - accountId: UUID
+        - userId: UUID
+        - name: String
+        - accountType: AccountType
+        - balance: Decimal
+        - state: AccountState
+        + deposit(amount): void
+        + withdraw(amount): void
+        + getTransactions(): List<Transaction>
+    }
+    
+    enum AccountType {
+        CHECKING
+        SAVINGS
+        CREDIT_CARD
+        INVESTMENT
+    }
+    
+    enum AccountState {
+        ACTIVE
+        FROZEN
+        CLOSED
+    }
+    
+    class Transaction {
+        - transactionId: UUID
+        - accountId: UUID
+        - amount: Decimal
+        - description: String
+        - categoryId: UUID
+        - transactionDate: DateTime
+        - isRecurring: Boolean
+        - confidence: ConfidenceLevel
+        + categorize(category): void
+        + isExpense(): Boolean
+    }
+    
+    enum ConfidenceLevel {
+        HIGH
+        MEDIUM
+        LOW
+        USER_VERIFIED
+    }
+    
+    class Category {
+        - categoryId: UUID
+        - name: String
+        - parentCategoryId: UUID
+        - icon: String
+        + getSubcategories(): List<Category>
+    }
+    
+    class Budget {
+        - budgetId: UUID
+        - userId: UUID
+        - categoryId: UUID
+        - amount: Decimal
+        - period: BudgetPeriod
+        - alertThreshold: Decimal
+        + checkThreshold(spending): ThresholdStatus
+        + getRemainingAmount(): Decimal
+    }
+    
+    enum BudgetPeriod {
+        WEEKLY
+        MONTHLY
+        YEARLY
+    }
+    
+    class CategorizationRule {
+        - ruleId: UUID
+        - ruleName: String
+        - ruleType: RuleType
+        - pattern: String
+        - categoryId: UUID
+        - priority: Integer
+        + matches(transaction): Boolean
+    }
+    
+    enum RuleType {
+        KEYWORD
+        MERCHANT
+        AMOUNT_RANGE
+    }
+}
+
+' ============================================================================
+' STRATEGY PATTERN - Categorization
+' ============================================================================
+package "Categorization Strategy" #E8E8FF {
+    
+    interface CategorizationStrategy {
+        + categorize(transaction): CategoryResult
+    }
+    
+    class KeywordStrategy {
+        - keywords: Map<String, Category>
+        + categorize(transaction): CategoryResult
+    }
+    
+    class MerchantStrategy {
+        - merchantMap: Map<String, Category>
+        + categorize(transaction): CategoryResult
+    }
+    
+    class AmountRangeStrategy {
+        - ranges: List<AmountRange>
+        + categorize(transaction): CategoryResult
+    }
+    
+    class LLMStrategy {
+        - llmAdapter: LLMAdapter
+        + categorize(transaction): CategoryResult
+    }
+}
+
+' ============================================================================
+' CHAIN OF RESPONSIBILITY
+' ============================================================================
+package "Categorization Chain" #FFE8E8 {
+    
+    abstract class CategorizationHandler {
+        # nextHandler: CategorizationHandler
+        + setNext(handler): CategorizationHandler
+        + handle(transaction): CategoryResult
+        # {abstract} process(transaction): CategoryResult
+    }
+    
+    class RuleBasedHandler {
+        - strategies: List<CategorizationStrategy>
+        # process(transaction): CategoryResult
+    }
+    
+    class AIHandler {
+        - llmStrategy: LLMStrategy
+        # process(transaction): CategoryResult
+    }
+    
+    class ManualHandler {
+        # process(transaction): CategoryResult
+    }
+}
+
+' ============================================================================
+' ADAPTER PATTERN
+' ============================================================================
+package "External Adapters" #FFF8E8 {
+    
+    interface BankAdapter {
+        + fetchTransactions(accountId): List<Transaction>
+        + getBalance(accountId): Decimal
+    }
+    
+    class PlaidAdapter {
+        - apiKey: String
+        + fetchTransactions(accountId): List<Transaction>
+    }
+    
+    class CSVAdapter {
+        - columnMapping: Map
+        + fetchTransactions(filePath): List<Transaction>
+    }
+    
+    interface LLMAdapter {
+        + classify(text, categories): CategoryPrediction
+    }
+    
+    class OpenAIAdapter {
+        - apiKey: String
+        + classify(text, categories): CategoryPrediction
+    }
+    
+    class AnthropicAdapter {
+        - apiKey: String
+        + classify(text, categories): CategoryPrediction
+    }
+}
+
+' ============================================================================
+' OBSERVER PATTERN
+' ============================================================================
+package "Budget Observer" #E8FFE8 {
+    
+    interface TransactionObserver {
+        + onTransactionCreated(transaction): void
+        + onTransactionUpdated(transaction): void
+    }
+    
+    class BudgetAlertObserver {
+        - budgetRepo: BudgetRepository
+        - alertFactory: AlertFactory
+        + onTransactionCreated(transaction): void
+    }
+    
+    class TransactionSubject {
+        - observers: List<TransactionObserver>
+        + attach(observer): void
+        + detach(observer): void
+        + notify(event): void
+    }
+}
+
+' ============================================================================
+' FACTORY PATTERN
+' ============================================================================
+package "Factories" #E8E8E8 {
+    
+    interface AlertFactory {
+        + createAlert(budget, spending): BudgetAlert
+    }
+    
+    class BudgetAlertFactory {
+        + createAlert(budget, spending): BudgetAlert
+        + createWarningAlert(): BudgetAlert
+        + createExceededAlert(): BudgetAlert
+    }
+    
+    class BudgetAlert {
+        - alertId: UUID
+        - alertType: AlertType
+        - message: String
+        - createdAt: DateTime
+    }
+    
+    enum AlertType {
+        WARNING_80
+        WARNING_90
+        EXCEEDED
+    }
+}
+
+' ============================================================================
+' REPOSITORY PATTERN
+' ============================================================================
+package "Repositories" #E8FFE8 {
+    
+    interface TransactionRepository {
+        + findById(id): Transaction
+        + findByCategory(categoryId): List<Transaction>
+        + save(transaction): Transaction
+    }
+    
+    interface BudgetRepository {
+        + findByUserId(userId): List<Budget>
+        + findByCategory(categoryId): Budget
+    }
+    
+    interface AccountRepository {
+        + findByUserId(userId): List<Account>
+        + save(account): Account
+    }
+}
+
+' ============================================================================
+' RELATIONSHIPS
+' ============================================================================
+
+' Entity relationships
+User "1" *-- "0..*" Account
+Account "1" *-- "0..*" Transaction
+Transaction "0..*" -- "1" Category
+User "1" *-- "0..*" Budget
+Budget "0..*" -- "1" Category
+User "1" *-- "0..*" CategorizationRule
+Category "0..*" -- "0..1" Category : parent
+
+' Strategy pattern
+CategorizationStrategy <|.. KeywordStrategy
+CategorizationStrategy <|.. MerchantStrategy
+CategorizationStrategy <|.. AmountRangeStrategy
+CategorizationStrategy <|.. LLMStrategy
+
+' Chain of Responsibility
+CategorizationHandler <|-- RuleBasedHandler
+CategorizationHandler <|-- AIHandler
+CategorizationHandler <|-- ManualHandler
+RuleBasedHandler o-- CategorizationStrategy
+
+' Adapter pattern
+BankAdapter <|.. PlaidAdapter
+BankAdapter <|.. CSVAdapter
+LLMAdapter <|.. OpenAIAdapter
+LLMAdapter <|.. AnthropicAdapter
+LLMStrategy o-- LLMAdapter
+
+' Observer pattern
+TransactionObserver <|.. BudgetAlertObserver
+TransactionSubject o-- TransactionObserver
+
+' Factory pattern
+AlertFactory <|.. BudgetAlertFactory
+BudgetAlertFactory ..> BudgetAlert : creates
+
+@enduml

@@ -1,0 +1,72 @@
+@startuml use_case_diagram
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor LightYellow
+    BorderColor DarkSlateGray
+}
+skinparam actor {
+    BackgroundColor LightBlue
+    BorderColor DarkSlateGray
+}
+
+actor User as "User"
+actor BankAPI as "Bank API"
+actor Notification as "Notification Service"
+
+rectangle "Intelligent Personal Finance Management System" {
+
+    usecase UC01 as "Import Transactions"
+    usecase UC02 as "Categorize Expenses"
+    usecase UC03 as "Set Budget Thresholds"
+    usecase UC04 as "View Analytics Dashboard"
+    usecase UC05 as "Manage Accounts"
+    usecase UC06 as "Receive Budget Alerts"
+    usecase UC07 as "Export Reports"
+    usecase UC08 as "Manage Categorization Rules"
+    usecase UC12 as "Authenticate User"
+
+    ' User interactions
+    User --> UC01
+    User --> UC02
+    User --> UC03
+    User --> UC04
+    User --> UC05
+    User --> UC06
+    User --> UC07
+    User --> UC08
+
+    ' External systems
+    BankAPI --> UC01
+    Notification --> UC06
+
+    ' <<include>> relationships
+    UC05 ..> UC12 : <<include>>
+    UC01 ..> UC02 : <<include>>
+    UC03 ..> UC06 : <<include>>
+
+    ' <<extend>> relationships
+    UC08 ..> UC02 : <<extend>>
+    UC07 ..> UC04 : <<extend>>
+}
+
+note right of User
+    Primary actor who interacts
+    with the system to manage
+    personal finances, set budgets,
+    view analytics, and receive alerts.
+end note
+
+note right of BankAPI
+    External banking service that
+    provides transaction data
+    to the system during import.
+end note
+
+note right of Notification
+    Sends alerts and notifications
+    to the user when budget
+    thresholds are exceeded.
+end note
+
+@enduml

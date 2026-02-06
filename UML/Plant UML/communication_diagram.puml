@@ -1,0 +1,68 @@
+@startuml communication_diagram
+title Budget Alert Generation\nCommunication Diagram (Observer Pattern)
+
+skinparam {
+    ObjectBackgroundColor LightYellow
+    ObjectBorderColor DarkSlateGray
+    ArrowColor DarkBlue
+}
+
+object ":TransactionService" as txnService #LightBlue
+object ":Transaction" as txn #LightGreen
+object ":BudgetObserver" as budgetObserver #LightCoral
+object ":BudgetRepository" as budgetRepo #Wheat
+object ":Budget" as budget #LightGreen
+object ":AlertFactory" as alertFactory #Plum
+object ":BudgetAlert" as alert #Pink
+object ":NotificationService" as notifService #LightSkyBlue
+object ":User" as user #LightCoral
+
+txnService --> txn : 1: create(amount, category)
+txnService --> txn : 1.1: save()
+
+txnService --> budgetObserver : 2: notify(transaction)
+
+budgetObserver --> budgetRepo : 3: findByCategory(categoryId)
+budgetRepo --> budget : 3.1: return Budget
+
+budgetObserver --> budget : 4: checkThreshold(spending)
+budget --> budgetObserver : 4.1: ThresholdStatus
+
+budgetObserver --> alertFactory : 5: createAlert(budget, spending)
+alertFactory --> alert : 5.1: new BudgetAlert()
+
+alert --> notifService : 6: send(alert, user)
+
+notifService --> user : 7: deliver notification
+
+note top of budgetObserver
+    **Observer Pattern**
+    Subscribes to transaction
+    events and triggers
+    budget checks
+end note
+
+note top of alertFactory
+    **Factory Pattern**
+    Creates appropriate
+    alert type based on
+    threshold severity
+end note
+
+note bottom of notifService
+    **Strategy Pattern**
+    Selects notification
+    channel based on
+    user preferences
+end note
+
+legend bottom
+    |= # |= Message |= Pattern |
+    | 1-1.1 | Transaction Creation | Factory |
+    | 2 | Event Notification | Observer |
+    | 3-4.1 | Budget Check | Repository |
+    | 5-5.1 | Alert Creation | Factory |
+    | 6-7 | Notification | Strategy |
+endlegend
+
+@enduml

@@ -1,0 +1,165 @@
+@startuml component_diagram
+title Intelligent Personal Finance Management System\nComponent Diagram (Layered Architecture)
+
+skinparam component {
+    BackgroundColor LightYellow
+    BorderColor DarkSlateGray
+}
+
+' ============================================================================
+' PRESENTATION LAYER
+' ============================================================================
+package "Presentation Layer" #E8F4EA {
+    
+    component [Web App\n(React)] as WebApp
+    component [Mobile App\n(Flutter)] as MobileApp
+    component [API Gateway] as APIGateway
+    
+    interface "REST API" as IREST
+}
+
+' ============================================================================
+' APPLICATION LAYER
+' ============================================================================
+package "Application Layer" #E8E8F4 {
+    
+    component [Transaction\nService] as TransactionSvc
+    component [Budget\nService] as BudgetSvc
+    component [Analytics\nService] as AnalyticsSvc
+    component [Account\nService] as AccountSvc
+    component [Notification\nService] as NotificationSvc
+    component [Auth\nService] as AuthSvc
+    
+    interface "ITransactionService" as ITransSvc
+    interface "IBudgetService" as IBudgetSvc
+    interface "IAccountService" as IAccountSvc
+}
+
+' ============================================================================
+' DOMAIN LAYER
+' ============================================================================
+package "Domain Layer" #F4E8E8 {
+    
+    component [Categorization\nEngine] as CategEngine
+    component [Rules\nEngine] as RulesEngine
+    component [Budget\nObserver] as BudgetObserver
+    component [Alert\nFactory] as AlertFactory
+    
+    interface "ICategorization" as ICategorization
+    interface "IObserver" as IObserver
+}
+
+' ============================================================================
+' INFRASTRUCTURE LAYER
+' ============================================================================
+package "Infrastructure Layer" #F4F4E8 {
+    
+    component [Transaction\nRepository] as TransRepo
+    component [Budget\nRepository] as BudgetRepo
+    component [Account\nRepository] as AccountRepo
+    component [ORM Layer\n(SQLAlchemy)] as ORM
+    
+    interface "IRepository" as IRepo
+}
+
+' ============================================================================
+' EXTERNAL SYSTEMS
+' ============================================================================
+package "External Systems" #FFEAEA {
+    
+    component [Plaid\nAdapter] as PlaidAdapter
+    component [CSV\nAdapter] as CSVAdapter
+    component [OpenAI\nAdapter] as OpenAIAdapter
+    component [Email\nService] as EmailSvc
+    component [Push\nService] as PushSvc
+}
+
+' ============================================================================
+' DATA STORAGE
+' ============================================================================
+database "PostgreSQL" as PostgresDB
+database "Redis Cache" as RedisCache
+
+' ============================================================================
+' CONNECTIONS
+' ============================================================================
+
+' Presentation
+WebApp --> IREST
+MobileApp --> IREST
+IREST --> APIGateway
+
+' API Gateway to Services
+APIGateway --> ITransSvc
+APIGateway --> IBudgetSvc
+APIGateway --> IAccountSvc
+
+ITransSvc -- TransactionSvc
+IBudgetSvc -- BudgetSvc
+IAccountSvc -- AccountSvc
+
+' Application to Domain
+TransactionSvc --> ICategorization
+TransactionSvc --> IObserver
+BudgetSvc --> IObserver
+
+ICategorization -- CategEngine
+IObserver -- BudgetObserver
+
+CategEngine --> RulesEngine
+BudgetObserver --> AlertFactory
+AlertFactory --> NotificationSvc
+
+' Application to Infrastructure
+TransactionSvc --> IRepo
+BudgetSvc --> IRepo
+AccountSvc --> IRepo
+
+IRepo -- TransRepo
+IRepo -- BudgetRepo
+IRepo -- AccountRepo
+
+TransRepo --> ORM
+BudgetRepo --> ORM
+AccountRepo --> ORM
+
+' Infrastructure to External
+ORM --> PostgresDB
+AnalyticsSvc --> RedisCache
+
+CategEngine --> OpenAIAdapter
+TransactionSvc --> PlaidAdapter
+TransactionSvc --> CSVAdapter
+
+NotificationSvc --> EmailSvc
+NotificationSvc --> PushSvc
+
+' ============================================================================
+' NOTES
+' ============================================================================
+note top of CategEngine
+    **Chain of Responsibility**
+    + **Strategy Pattern**
+end note
+
+note right of BudgetObserver
+    **Observer Pattern**
+end note
+
+note bottom of ORM
+    **Repository Pattern**
+end note
+
+note right of AlertFactory
+    **Factory Pattern**
+end note
+
+legend bottom
+    |= Layer |= Responsibility |
+    | Presentation | UI & API Gateway |
+    | Application | Business Logic |
+    | Domain | Core Rules |
+    | Infrastructure | Data Access |
+endlegend
+
+@enduml

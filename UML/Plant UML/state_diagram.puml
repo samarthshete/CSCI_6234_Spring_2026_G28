@@ -1,0 +1,121 @@
+@startuml state_diagram
+title Account & Budget Alert State Machines\nState Diagram (State Pattern)
+
+skinparam state {
+    BackgroundColor LightYellow
+    BorderColor DarkSlateGray
+}
+
+' ============================================================================
+' ACCOUNT STATE MACHINE
+' ============================================================================
+state "Account Lifecycle" as AccountSM {
+    
+    [*] --> Pending : create()
+    
+    state Pending {
+        Pending : entry / initializeAccount()
+    }
+    
+    Pending --> Active : verify() [success]
+    Pending --> Rejected : verify() [failed]
+    
+    state Active {
+        Active : entry / enableTransactions()
+        Active : do / processTransactions()
+    }
+    
+    Active --> Frozen : freeze()
+    Active --> Closed : close() [balance == 0]
+    Active --> Overdrawn : withdraw() [balance < 0]
+    
+    state Overdrawn {
+        Overdrawn : entry / sendOverdraftNotice()
+    }
+    
+    Overdrawn --> Active : deposit() [balance >= 0]
+    Overdrawn --> Frozen : freeze() [30 days unpaid]
+    
+    state Frozen {
+        Frozen : entry / disableTransactions()
+        Frozen : entry / notifyUser()
+    }
+    
+    Frozen --> Active : unfreeze()
+    Frozen --> Closed : close()
+    
+    state Closed {
+        Closed : entry / archiveTransactions()
+    }
+    
+    Closed --> [*]
+    Rejected --> [*]
+}
+
+--
+
+' ============================================================================
+' BUDGET ALERT STATE MACHINE
+' ============================================================================
+state "Budget Alert Lifecycle" as BudgetSM {
+    
+    [*] --> Monitoring : createBudget()
+    
+    state Monitoring {
+        Monitoring : do / observeTransactions()
+    }
+    
+    Monitoring --> Warning80 : spending >= 80%
+    
+    state Warning80 {
+        Warning80 : entry / sendWarning("80%")
+    }
+    
+    Warning80 --> Warning90 : spending >= 90%
+    Warning80 --> Monitoring : newPeriod()
+    
+    state Warning90 {
+        Warning90 : entry / sendUrgentWarning("90%")
+    }
+    
+    Warning90 --> Exceeded : spending >= 100%
+    Warning90 --> Monitoring : newPeriod()
+    
+    state Exceeded {
+        Exceeded : entry / sendExceededAlert()
+        Exceeded : entry / logOverspend()
+    }
+    
+    Exceeded --> Monitoring : newPeriod()
+    Exceeded --> Adjusted : adjustBudget()
+    
+    state Adjusted {
+        Adjusted : entry / recalculateStatus()
+    }
+    
+    Adjusted --> Monitoring : spending < limit
+    Adjusted --> Warning80 : spending >= 80%
+}
+
+legend right
+    |= Symbol |= Meaning |
+    | [*] | Initial/Final State |
+    | --> | Transition |
+    | [condition] | Guard |
+    | entry / | Entry Action |
+    | do / | Activity |
+endlegend
+
+note bottom of AccountSM
+    **State Pattern**
+    Account behavior changes
+    based on current state
+end note
+
+note bottom of BudgetSM
+    **Observer Pattern**
+    Monitors spending and
+    triggers state transitions
+end note
+
+@enduml
