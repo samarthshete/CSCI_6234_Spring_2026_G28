@@ -85,8 +85,6 @@ A comprehensive personal finance management system demonstrating Object-Oriented
 All diagrams are created using PlantUML. To view:
 
 1. **Online**: Go to https://www.plantuml.com/plantuml/uml/
-2. **VS Code**: Install PlantUML extension, press `Alt+D`
-3. **Command Line**: `java -jar plantuml.jar diagram.puml`
 
 ### Diagram Types (per Martin Fowler's UML Distilled)
 
