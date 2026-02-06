@@ -1,0 +1,29 @@
+@startuml
+title Collaboration (Communication) Diagram - Add Transaction with Budget Alert
+left to right direction
+
+object "user:User" as user
+object "ui:TransactionForm" as ui
+object "controller:TransactionController" as controller
+object "validator:TransactionValidator" as validator
+object "categorizer:CategorizationService" as categorizer
+object "repo:TransactionRepository" as repo
+object "budgetSvc:BudgetService" as budgetSvc
+object "alertFactory:AlertFactory" as alertFactory
+object "notif:NotificationService" as notif
+
+user --> ui : 1: selectAddTransaction()
+ui --> user : 2: displayForm()
+user --> ui : 3: submitTransaction(data)
+ui --> controller : 3.1: addTransaction(data)
+controller --> validator : 4: validate(data)
+controller --> categorizer : 5: categorize(data)
+controller --> repo : 6: save(transaction)
+controller --> budgetSvc : 7: updateUsage(transaction)
+budgetSvc --> budgetSvc : 8: checkThreshold()
+budgetSvc --> alertFactory : 9: createAlert()
+alertFactory --> budgetSvc : 9.1: BudgetAlert
+budgetSvc --> notif : 10: send(BudgetAlert)
+controller --> ui : 11: showConfirmation()
+
+@enduml
