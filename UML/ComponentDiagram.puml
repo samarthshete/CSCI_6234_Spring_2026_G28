@@ -1,0 +1,47 @@
+@startuml
+title Component Diagram - Personal Finance Management System
+left to right direction
+
+package "UI Layer" {
+  [Desktop UI] as UI
+}
+
+package "Application Layer" {
+  [TransactionController] as TC
+  [CategorizationService] as CS
+  [BudgetService] as BS
+}
+
+package "Domain Layer" {
+  [Domain Model\n(Account, Transaction,\nBudget, Money)] as DM
+  [Rules Engine] as RE
+}
+
+package "Infrastructure Layer" {
+  [SQLite Persistence] as DB
+  [CSV Import Adapter] as CSV
+  [Notification Adapter] as NA
+}
+
+interface "ITransactionRepository" as ITR
+interface "INotificationChannel" as INC
+interface "IBankImportAdapter" as IBA
+
+UI --> TC
+TC --> CS
+TC --> BS
+TC --> DM
+
+CS --> RE
+BS --> DM
+
+TC --> ITR
+DB ..|> ITR
+
+CSV ..|> IBA
+TC <-- CSV : uses
+
+BS --> INC
+NA ..|> INC
+
+@enduml
