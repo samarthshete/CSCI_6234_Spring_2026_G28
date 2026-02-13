@@ -1,94 +1,108 @@
-# Analysis - Robustness Diagrams
+# Analysis Phase – Robustness Diagrams
 
 ## Intelligent Personal Finance Management System
-### CSCI 6234 - Object-Oriented Design
+
+CSCI 6234 – Object-Oriented Design
 
 ---
 
-## 📁 Folder Contents
+## 📌 Purpose of This Folder
 
-| File Pattern | Description |
-|--------------|-------------|
-| `UC##_<Name>.puml` | PlantUML source file |
-| `UC##_<Name>.png` | Generated PNG image |
-| `UC##_<Name>_HandDrawn.pdf` | Hand-drawn diagram (PDF) |
+This folder contains the robustness diagrams created during the **Analysis discipline** of the OOAD process.
 
----
+Robustness analysis bridges the gap between:
 
-## 📊 Robustness Diagrams (7 Use Cases)
+- **Use Case Analysis (What the system does)**
+- **Design (How the system will be implemented)**
 
-| UC# | Use Case Name | File |
-|-----|---------------|------|
-| UC01 | Authenticate User | `UC01_Authenticate_User.puml` |
-| UC02 | Manage Accounts | `UC02_Manage_Accounts.puml` |
-| UC03 | Import Transactions | `UC03_Import_Transactions.puml` |
-| UC04 | Categorize Expenses | `UC04_Categorize_Expenses.puml` |
-| UC05 | Set Budget Thresholds | `UC05_Set_Budget_Thresholds.puml` |
-| UC06 | Receive Budget Alerts | `UC06_Receive_Budget_Alerts.puml` |
-| UC07 | View Analytics Dashboard | `UC07_View_Analytics_Dashboard.puml` |
+The diagrams follow the robustness modeling approach described by:
+
+- I. Jacobson et al., _The Unified Software Development Process_, 1999
+- J. Arlow & I. Neustadt, _UML and the Unified Process_, 2002
 
 ---
 
-## 🔧 Robustness Diagram Elements
+## 📊 Robustness Diagrams Included (7 Use Cases)
 
-### Stereotypes Used
+1. Authenticate User
+2. Manage Accounts
+3. Import Transactions
+4. Categorize Expenses
+5. Set Budget Thresholds
+6. Receive Budget Alerts
+7. View Analytics Dashboard
 
-| Symbol | Type | Description |
-|--------|------|-------------|
-| 🖥️ | **Boundary** | UI screens, forms, interfaces |
-| ⚙️ | **Control** | Controllers, handlers, business logic |
-| 📦 | **Entity** | Domain objects, data entities |
-
-### Connection Rules
-
-```
-✅ ALLOWED:
-   Actor ←→ Boundary
-   Boundary ←→ Control
-   Control ←→ Control
-   Control ←→ Entity
-
-❌ NOT ALLOWED:
-   Actor ←→ Control
-   Actor ←→ Entity
-   Boundary ←→ Entity
-```
+Each use case has its own folder.
 
 ---
 
-## 🎯 Design Patterns Identified
+## 📁 Folder Structure
 
-| Use Case | Design Patterns |
-|----------|-----------------|
-| UC04 - Categorize Expenses | Chain of Responsibility, Strategy, Adapter |
-| UC06 - Receive Budget Alerts | Observer, Factory |
-| UC02 - Manage Accounts | Repository |
-| UC03 - Import Transactions | Adapter |
+Each use case folder contains:
 
----
+- `<Use_Case_Name>.puml`  
+  → PlantUML source file
 
-## 🔗 How to Generate PNG Images
+- `<Use_Case_Name>.png`  
+  → PNG image generated from PlantUML
 
-### Option 1: PlantUML Online Server
-1. Go to http://www.plantuml.com/plantuml/uml/
-2. Paste `.puml` file content
-3. Right-click image → Save as PNG
+- `<Use_Case_Name>_HandDrawn.pdf`  
+  → Hand-drawn robustness diagram (white background, no lines)
 
-### Option 2: VS Code
-1. Install PlantUML extension
-2. Open `.puml` file
-3. Press `Alt+D` to preview
-4. Export as PNG
+Example:
 
-### Option 3: Command Line
-```bash
-java -jar plantuml.jar UC01_Authenticate_User.puml
-```
+Authenticate_User/
+├── Authenticate_User.puml
+├── Authenticate_User.png
+└── Authenticate_User_HandDrawn.pdf
 
 ---
 
-## 📚 References
+## 🔧 Robustness Modeling Conventions Used
 
-- I. Jacobson et al., *The Unified Software Development Process*, Addison Wesley, 1999
-- J. Arlow and I. Neustadt, *UML and the Unified Process*, Addison Wesley, 2002
-- https://gyires.inf.unideb.hu/GyBITT/07/ch03s05.html
+The diagrams follow the **Entity–Control–Boundary (ECB)** pattern.
+
+### Stereotypes
+
+- `<<boundary>>`  
+  Represents system interfaces (UI screens or external system interfaces)
+
+- `<<control>>`  
+  Represents coordination logic for a use case
+
+- `<<entity>>`  
+  Represents domain model objects and persistent data
+
+---
+
+## 🔗 Communication Rules Applied
+
+The following robustness rules were enforced:
+
+Allowed:
+
+- Actor ↔ Boundary
+- Boundary ↔ Control
+- Control ↔ Entity
+- Control ↔ Control
+
+Not Allowed:
+
+- Actor ↔ Entity
+- Boundary ↔ Entity
+
+This ensures proper separation of concerns and maintains the noun – verb – noun interaction pattern.
+
+---
+
+## 🎯 Objective of Robustness Analysis
+
+The goal of these diagrams is to:
+
+- Identify participating objects for each use case
+- Separate interface logic from business logic
+- Validate use case structure
+- Prepare for future sequence and class diagram design
+
+These diagrams do not represent execution order.  
+They represent responsibility and object interaction structure.

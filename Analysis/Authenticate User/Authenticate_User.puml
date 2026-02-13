@@ -1,0 +1,84 @@
+@startuml UC01_Authenticate_User_Robustness_CORRECT
+
+title Robustness Diagram: UC01 - Authenticate User
+
+skinparam backgroundColor white
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+' Stereotypes styling
+skinparam boundary {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam control {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+}
+
+' ============================================================
+' ACTOR
+' ============================================================
+actor "User" as user
+
+' ============================================================
+' BOUNDARY OBJECTS (UI/Screens)
+' ============================================================
+boundary "Login Screen" as loginScreen
+boundary "Dashboard Screen" as dashboardScreen
+boundary "Error Message Display" as errorDisplay
+
+' ============================================================
+' CONTROL OBJECTS (Business Logic)
+' ============================================================
+control "Authentication\nController" as authController
+control "Session\nManager" as sessionManager
+
+' ============================================================
+' ENTITY OBJECTS (Data)
+' ============================================================
+entity "User Account" as userAccount
+entity "Session" as session
+
+' ============================================================
+' CONNECTIONS (Static - No time ordering)
+' ============================================================
+
+' Actor to Boundary
+user --> loginScreen
+
+' Boundary to Control
+loginScreen --> authController
+authController --> dashboardScreen
+authController --> errorDisplay
+
+' Control to Control
+authController --> sessionManager
+
+' Control to Entity
+authController --> userAccount
+sessionManager --> session
+
+' ============================================================
+' NOTES
+' ============================================================
+note bottom of loginScreen
+    User enters credentials
+    (username/password)
+end note
+
+note bottom of authController
+    Validates credentials
+    against User Account
+end note
+
+note bottom of sessionManager
+    Creates session on
+    successful authentication
+end note
+
+@enduml

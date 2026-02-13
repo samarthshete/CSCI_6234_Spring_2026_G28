@@ -1,0 +1,91 @@
+@startuml UC07_View_Analytics_Dashboard_Robustness_CORRECT
+
+title Robustness Diagram: UC07 - View Analytics Dashboard
+
+skinparam backgroundColor white
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam boundary {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam control {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+}
+
+' ============================================================
+' ACTOR
+' ============================================================
+actor "User" as user
+
+' ============================================================
+' BOUNDARY OBJECTS
+' ============================================================
+boundary "Dashboard\nScreen" as dashboardScreen
+boundary "Spending\nCharts" as spendingCharts
+boundary "Category\nBreakdown Panel" as categoryPanel
+boundary "Date Range\nFilter" as dateFilter
+boundary "Budget Progress\nIndicators" as budgetProgress
+boundary "Trend\nVisualization" as trendViz
+
+' ============================================================
+' CONTROL OBJECTS
+' ============================================================
+control "Analytics\nController" as analyticsController
+control "Data\nAggregator" as dataAggregator
+control "Chart\nGenerator" as chartGenerator
+control "Trend\nAnalyzer" as trendAnalyzer
+
+' ============================================================
+' ENTITY OBJECTS
+' ============================================================
+entity "Transaction" as transaction
+entity "Category" as category
+entity "Budget" as budget
+entity "Account" as account
+
+' ============================================================
+' CONNECTIONS (Static)
+' ============================================================
+
+' Actor to Boundaries
+user --> dashboardScreen
+user --> dateFilter
+
+' Boundaries to Controls
+dashboardScreen --> analyticsController
+dateFilter --> dataAggregator
+
+' Control to Control
+analyticsController --> dataAggregator
+dataAggregator --> chartGenerator
+dataAggregator --> trendAnalyzer
+
+' Controls to Boundaries (feedback)
+chartGenerator --> spendingCharts
+analyticsController --> categoryPanel
+analyticsController --> budgetProgress
+trendAnalyzer --> trendViz
+
+' Controls to Entities
+dataAggregator --> transaction
+dataAggregator --> category
+dataAggregator --> budget
+dataAggregator --> account
+
+' ============================================================
+' NOTE
+' ============================================================
+note right of dataAggregator
+    Aggregates data from
+    multiple entities for
+    dashboard visualization
+end note
+
+@enduml

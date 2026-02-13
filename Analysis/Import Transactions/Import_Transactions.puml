@@ -1,0 +1,91 @@
+@startuml UC03_Import_Transactions_Robustness_CORRECT
+
+title Robustness Diagram: UC03 - Import Transactions
+
+skinparam backgroundColor white
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam boundary {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam control {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+}
+
+' ============================================================
+' ACTORS
+' ============================================================
+actor "User" as user
+actor "External\nBanking System" as bankingSystem
+
+' ============================================================
+' BOUNDARY OBJECTS
+' ============================================================
+boundary "Import Screen" as importScreen
+boundary "Account Selector" as accountSelector
+boundary "File Upload\nDialog" as fileUpload
+boundary "Bank API\nInterface" as bankAPIInterface
+boundary "Progress\nIndicator" as progressIndicator
+boundary "Import Result\nScreen" as resultScreen
+
+' ============================================================
+' CONTROL OBJECTS
+' ============================================================
+control "Import\nController" as importController
+control "Transaction\nParser" as transactionParser
+control "Duplicate\nDetector" as duplicateDetector
+control "Categorization\nTrigger" as categorizationTrigger
+
+' ============================================================
+' ENTITY OBJECTS
+' ============================================================
+entity "Transaction" as transaction
+entity "Account" as account
+
+' ============================================================
+' CONNECTIONS (Static)
+' ============================================================
+
+' Actors to Boundaries
+user --> importScreen
+user --> accountSelector
+user --> fileUpload
+bankingSystem --> bankAPIInterface
+
+' Boundaries to Controls
+importScreen --> importController
+accountSelector --> importController
+fileUpload --> transactionParser
+bankAPIInterface --> transactionParser
+
+' Control to Control
+transactionParser --> duplicateDetector
+duplicateDetector --> importController
+importController --> categorizationTrigger
+
+' Controls to Boundaries (feedback)
+importController --> progressIndicator
+importController --> resultScreen
+
+' Controls to Entities
+importController --> transaction
+importController --> account
+duplicateDetector --> transaction
+
+' ============================================================
+' NOTE
+' ============================================================
+note right of categorizationTrigger
+    Triggers UC04
+    (Categorize Expenses)
+    <<include>>
+end note
+
+@enduml

@@ -1,0 +1,96 @@
+@startuml UC06_Receive_Budget_Alerts_Robustness_CORRECT
+
+title Robustness Diagram: UC06 - Receive Budget Alerts
+
+skinparam backgroundColor white
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam boundary {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam control {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+}
+
+' ============================================================
+' ACTORS
+' ============================================================
+actor "User" as user
+actor "Notification\nService" as notificationService
+
+' ============================================================
+' BOUNDARY OBJECTS
+' ============================================================
+boundary "Alert\nNotification\nPanel" as alertPanel
+boundary "Alert Details\nScreen" as alertDetailsScreen
+boundary "Email/Push\nInterface" as notificationInterface
+boundary "Dashboard\nAlert Badge" as alertBadge
+
+' ============================================================
+' CONTROL OBJECTS (Observer + Factory Pattern)
+' ============================================================
+control "Budget\nMonitor" as budgetMonitor
+control "Alert\nController" as alertController
+control "Alert\nFactory" as alertFactory
+control "Notification\nDispatcher" as notificationDispatcher
+
+' ============================================================
+' ENTITY OBJECTS
+' ============================================================
+entity "Budget" as budget
+entity "Budget Alert" as budgetAlert
+entity "Transaction" as transaction
+entity "User\nPreferences" as userPrefs
+
+' ============================================================
+' CONNECTIONS (Static)
+' ============================================================
+
+' Actor to Boundaries
+user --> alertPanel
+user --> alertDetailsScreen
+notificationService --> notificationInterface
+
+' Boundaries to Controls
+alertPanel --> alertController
+alertDetailsScreen --> alertController
+
+' Control to Control (Observer + Factory)
+budgetMonitor --> alertFactory
+alertFactory --> alertController
+alertController --> notificationDispatcher
+
+' Controls to Boundaries (feedback)
+alertController --> alertPanel
+alertController --> alertBadge
+notificationDispatcher --> notificationInterface
+
+' Controls to Entities
+budgetMonitor --> budget
+budgetMonitor --> transaction
+alertFactory --> budgetAlert
+alertController --> budgetAlert
+notificationDispatcher --> userPrefs
+
+' ============================================================
+' NOTE
+' ============================================================
+note bottom of budgetMonitor
+    Observer Pattern:
+    Monitors transactions
+end note
+
+note bottom of alertFactory
+    Factory Pattern:
+    Creates WARNING_80,
+    WARNING_90, EXCEEDED alerts
+end note
+
+@enduml

@@ -1,0 +1,90 @@
+@startuml UC05_Set_Budget_Thresholds_Robustness_CORRECT
+
+title Robustness Diagram: UC05 - Set Budget Thresholds
+
+skinparam backgroundColor white
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam boundary {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam control {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+}
+
+' ============================================================
+' ACTOR
+' ============================================================
+actor "User" as user
+
+' ============================================================
+' BOUNDARY OBJECTS
+' ============================================================
+boundary "Budget Settings\nScreen" as budgetScreen
+boundary "Category\nSelector" as categorySelector
+boundary "Amount Input\nForm" as amountForm
+boundary "Period\nSelector" as periodSelector
+boundary "Alert Threshold\nConfiguration" as alertConfig
+boundary "Confirmation\nMessage" as confirmationMsg
+
+' ============================================================
+' CONTROL OBJECTS
+' ============================================================
+control "Budget\nController" as budgetController
+control "Validation\nHandler" as validationHandler
+control "Alert Config\nManager" as alertConfigManager
+
+' ============================================================
+' ENTITY OBJECTS
+' ============================================================
+entity "Budget" as budget
+entity "Category" as category
+entity "User" as userEntity
+
+' ============================================================
+' CONNECTIONS (Static)
+' ============================================================
+
+' Actor to Boundaries
+user --> budgetScreen
+user --> categorySelector
+user --> amountForm
+user --> periodSelector
+user --> alertConfig
+
+' Boundaries to Controls
+budgetScreen --> budgetController
+categorySelector --> budgetController
+amountForm --> validationHandler
+periodSelector --> budgetController
+alertConfig --> alertConfigManager
+
+' Control to Control
+validationHandler --> budgetController
+budgetController --> alertConfigManager
+
+' Controls to Boundaries (feedback)
+budgetController --> confirmationMsg
+
+' Controls to Entities
+budgetController --> budget
+budgetController --> category
+budgetController --> userEntity
+alertConfigManager --> budget
+
+' ============================================================
+' NOTE
+' ============================================================
+note right of alertConfigManager
+    Sets up alert triggers
+    Includes UC06 (Receive Budget Alerts)
+end note
+
+@enduml

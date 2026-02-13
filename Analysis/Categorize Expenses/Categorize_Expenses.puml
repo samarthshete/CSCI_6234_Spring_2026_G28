@@ -1,0 +1,91 @@
+@startuml UC04_Categorize_Expenses_Robustness_CORRECT
+
+title Robustness Diagram: UC04 - Categorize Expenses
+
+skinparam backgroundColor white
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam boundary {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam control {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+}
+
+' ============================================================
+' ACTOR
+' ============================================================
+actor "User" as user
+
+' ============================================================
+' BOUNDARY OBJECTS
+' ============================================================
+boundary "Transaction\nList Screen" as transactionListScreen
+boundary "Category\nSelector" as categorySelector
+boundary "Manual\nCategorization\nPrompt" as manualPrompt
+boundary "Categorization\nResult Display" as resultDisplay
+
+' ============================================================
+' CONTROL OBJECTS (Chain of Responsibility)
+' ============================================================
+control "Categorization\nController" as categController
+control "Rule-Based\nHandler" as ruleHandler
+control "AI Classification\nHandler" as aiHandler
+control "Manual\nHandler" as manualHandler
+control "Confidence\nEvaluator" as confidenceEvaluator
+
+' ============================================================
+' ENTITY OBJECTS
+' ============================================================
+entity "Transaction" as transaction
+entity "Category" as category
+entity "Categorization\nRule" as categRule
+
+' ============================================================
+' CONNECTIONS (Static)
+' ============================================================
+
+' Actor to Boundaries
+user --> transactionListScreen
+user --> categorySelector
+user --> manualPrompt
+
+' Boundaries to Controls
+transactionListScreen --> categController
+categorySelector --> manualHandler
+manualPrompt --> manualHandler
+
+' Control to Control (Chain of Responsibility)
+categController --> ruleHandler
+ruleHandler --> aiHandler
+aiHandler --> confidenceEvaluator
+confidenceEvaluator --> manualHandler
+manualHandler --> categController
+
+' Controls to Boundaries (feedback)
+categController --> resultDisplay
+
+' Controls to Entities
+ruleHandler --> categRule
+ruleHandler --> transaction
+aiHandler --> transaction
+aiHandler --> category
+categController --> transaction
+categController --> category
+
+' ============================================================
+' NOTE
+' ============================================================
+note bottom of ruleHandler
+    Chain of Responsibility:
+    1. Rule-Based → 2. AI → 3. Manual
+end note
+
+@enduml

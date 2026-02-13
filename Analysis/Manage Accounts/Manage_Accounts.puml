@@ -1,0 +1,83 @@
+@startuml UC02_Manage_Accounts_Robustness_CORRECT
+
+title Robustness Diagram: UC02 - Manage Accounts
+
+skinparam backgroundColor white
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam boundary {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam control {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+}
+
+' ============================================================
+' ACTOR
+' ============================================================
+actor "User" as user
+
+' ============================================================
+' BOUNDARY OBJECTS
+' ============================================================
+boundary "Account List\nScreen" as accountListScreen
+boundary "Add Account\nForm" as addAccountForm
+boundary "Edit Account\nForm" as editAccountForm
+boundary "Confirmation\nDialog" as confirmDialog
+boundary "Success/Error\nMessage" as messageDisplay
+
+' ============================================================
+' CONTROL OBJECTS
+' ============================================================
+control "Account\nController" as accountController
+control "Validation\nHandler" as validationHandler
+
+' ============================================================
+' ENTITY OBJECTS
+' ============================================================
+entity "Account" as account
+entity "User" as userEntity
+
+' ============================================================
+' CONNECTIONS (Static)
+' ============================================================
+
+' Actor to Boundaries
+user --> accountListScreen
+user --> addAccountForm
+user --> editAccountForm
+user --> confirmDialog
+
+' Boundaries to Controls
+accountListScreen --> accountController
+addAccountForm --> validationHandler
+editAccountForm --> validationHandler
+confirmDialog --> accountController
+
+' Control to Control
+validationHandler --> accountController
+
+' Controls to Boundaries (feedback)
+accountController --> messageDisplay
+accountController --> accountListScreen
+
+' Controls to Entities
+accountController --> account
+accountController --> userEntity
+
+' ============================================================
+' NOTE
+' ============================================================
+note right of accountController
+    Performs CRUD operations
+    Includes UC01 (Authenticate User)
+end note
+
+@enduml
