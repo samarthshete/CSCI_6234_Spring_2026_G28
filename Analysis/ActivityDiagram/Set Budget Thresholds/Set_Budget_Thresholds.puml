@@ -1,0 +1,185 @@
+@startuml Set_Budget_Thresholds_Activity
+
+' ============================================================
+' ACTIVITY DIAGRAM DESCRIPTION
+' ============================================================
+' Use Case: UC05 - Set Budget Thresholds
+' Actor: User
+' Includes: UC01 - Authenticate User
+' Goal: Define spending limits and alert thresholds for categories
+'
+' STEPS (mapped to actions in diagram):
+' Step 1: User requests Budget Settings (<<include>> UC01)
+' Step 2: System verifies user is authenticated
+' Step 3: If not authenticated, redirect to Login
+' Step 4: System loads User's existing Budget list
+' Step 5: System loads available Category list
+' Step 6: System displays Budget Settings Screen
+' Step 7: User selects action (Create/Edit/Delete)
+' Step 8 (Create): System displays New Budget Form
+' Step 9 (Create): User enters budget details (name, category, limit, period, threshold)
+' Step 10 (Create): System validates input data
+' Step 11 (Create): If invalid, display errors and user corrects data
+' Step 12 (Create): System creates Budget and BudgetItem entities
+' Step 13 (Edit): User selects Budget to edit
+' Step 14 (Edit): System displays Edit Form with current data
+' Step 15 (Edit): User modifies and submits changes
+' Step 16 (Edit): System validates and updates Budget entities
+' Step 17 (Delete): User selects Budget to delete
+' Step 18 (Delete): System displays confirmation dialog
+' Step 19 (Delete): If confirmed, system deletes Budget entities
+' Step 20: System displays success message
+' Step 21: System refreshes budget list
+' ============================================================
+
+title Activity Diagram: UC05 - Set Budget Thresholds
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF3E0
+skinparam ActivityDiamondBorderColor #F57C00
+
+|User|
+start
+
+:Request Budget Settings;
+note right
+  Step 1
+  <<include>> UC01
+  Authenticate User
+end note
+
+|System|
+:Verify User Authenticated;
+note right: Step 2
+
+if (Authenticated?) then (yes)
+    :Load User's Budget List;
+    note right: Step 4
+    
+    :Load Category List;
+    note right: Step 5
+    
+    :Display Budget Settings Screen;
+    note right: Step 6
+    
+    |User|
+    :Select Action;
+    note right: Step 7
+    
+    switch (Action Type?)
+    
+    case (Create Budget)
+        |System|
+        :Display New Budget Form;
+        note right: Step 8
+        
+        |User|
+        repeat
+            :Enter Budget Details;
+            note right
+              Step 9
+              - Budget Name
+              - Category (or Overall)
+              - Limit Amount
+              - Period (Weekly/Monthly/Yearly)
+              - Alert Threshold Percentage
+            end note
+            
+            :Submit Budget;
+            
+            |System|
+            :Validate Input Data;
+            note right: Step 10
+            
+            if (Data Valid?) then (no)
+                :Display Validation Errors;
+                note right: Step 11
+                |User|
+            endif
+            
+        repeat while (Data Invalid?) is (yes)
+        
+        |System|
+        :Create Budget Entity;
+        note right: Step 12
+        
+        :Create BudgetItem Entity;
+        :Link BudgetItem to Category;
+        
+    case (Edit Budget)
+        |User|
+        :Select Budget to Edit;
+        note right: Step 13
+        
+        |System|
+        :Display Edit Form with Current Data;
+        note right: Step 14
+        
+        |User|
+        repeat
+            :Modify Budget Settings;
+            note right: Step 15
+            
+            :Submit Changes;
+            
+            |System|
+            :Validate Updated Data;
+            
+            if (Data Valid?) then (no)
+                :Display Validation Errors;
+                |User|
+            endif
+            
+        repeat while (Data Invalid?) is (yes)
+        
+        |System|
+        :Update Budget Entity;
+        note right: Step 16
+        
+        :Update BudgetItem Entity;
+        
+    case (Delete Budget)
+        |User|
+        :Select Budget to Delete;
+        note right: Step 17
+        
+        |System|
+        :Display Confirmation Dialog;
+        note right: Step 18
+        
+        |User|
+        if (Confirm Delete?) then (yes)
+            |System|
+            :Delete BudgetItem Entity;
+            note right: Step 19
+            
+            :Delete Budget Entity;
+        else (no)
+            |System|
+            :Cancel Operation;
+        endif
+        
+    endswitch
+    
+    |System|
+    :Display Success Message;
+    note right: Step 20
+    
+    :Refresh Budget List;
+    note right: Step 21
+    
+    |User|
+    :View Updated Budget List;
+    
+    stop
+    
+else (no)
+    :Redirect to Login;
+    note right: Step 3
+    stop
+endif
+
+@enduml

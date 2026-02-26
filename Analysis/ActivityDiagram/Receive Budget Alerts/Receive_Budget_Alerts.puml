@@ -1,0 +1,122 @@
+@startuml Receive_Budget_Alerts_Activity
+
+' ============================================================
+' ACTIVITY DIAGRAM DESCRIPTION
+' ============================================================
+' Use Case: UC06 - Receive Budget Alerts
+' Actors: System (automatic), User (recipient), Notification Service
+' Goal: Notify user when spending approaches or exceeds budget threshold
+'
+' STEPS (mapped to actions in diagram):
+' Step 1: System detects new Transaction saved
+' Step 2: System retrieves Transaction amount and Category
+' Step 3: System finds Budget for the Transaction's Category
+' Step 4: If no Budget for Category, no monitoring needed
+' Step 5: System retrieves BudgetItem with limitAmount
+' Step 6: System calculates total spending for current budget period
+' Step 7: System calculates percentage of budget used
+' Step 8: System checks if configured threshold has been crossed
+' Step 9: If threshold not crossed, no alert needed
+' Step 10: If threshold crossed and not already alerted, create BudgetAlert
+' Step 11: System saves BudgetAlert entity with thresholdPercent and createdAt
+' Step 12: System links BudgetAlert to Budget and User
+' Step 13: System sends alert to Notification Service
+' Step 14: Notification Service delivers notification to User
+' Step 15: User receives and views alert
+' Step 16: User acknowledges or dismisses alert
+' ============================================================
+
+title Activity Diagram: UC06 - Receive Budget Alerts
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF3E0
+skinparam ActivityDiamondBorderColor #F57C00
+
+|System|
+start
+
+:Detect New Transaction Saved;
+note right: Step 1
+
+:Get Transaction Amount and Category;
+note right: Step 2
+
+:Find Budget for Category;
+note right: Step 3
+
+if (Budget Found?) then (yes)
+    :Get BudgetItem (limitAmount);
+    note right: Step 5
+    
+    :Calculate Period Spending Total;
+    note right: Step 6
+    
+    :Calculate Percentage Used;
+    note right: Step 7
+    
+    :Check Against Alert Threshold;
+    note right: Step 8
+    
+    if (Threshold Crossed?) then (yes)
+        if (Alert Already Sent?) then (no)
+            :Create BudgetAlert Entity;
+            note right: Step 10
+            
+            :Set thresholdPercent and createdAt;
+            note right: Step 11
+            
+            :Link to Budget and User;
+            note right: Step 12
+            
+            :Send to Notification Service;
+            note right: Step 13
+            
+            |Notification Service|
+            :Format Alert Message;
+            
+            :Deliver Notification to User;
+            note right: Step 14
+            
+            |User|
+            :Receive Notification;
+            note right: Step 15
+            
+            :View Alert Details;
+            
+            switch (User Action?)
+            note right: Step 16
+            
+            case (Acknowledge)
+                |System|
+                :Mark Alert as Read;
+                
+            case (Dismiss)
+                |System|
+                :Mark Alert as Dismissed;
+                
+            case (View Budget)
+                |System|
+                :Navigate to Budget Details;
+                
+            endswitch
+            
+        else (yes)
+            :Alert Already Sent - Skip;
+        endif
+        
+    else (no)
+        :No Alert Needed;
+        note right: Step 9
+    endif
+    
+else (no)
+    :No Budget to Monitor;
+    note right: Step 4
+endif
+
+stop
+
+@enduml

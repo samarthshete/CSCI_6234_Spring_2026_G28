@@ -1,0 +1,145 @@
+@startuml View_Analytics_Dashboard_Activity
+
+' ============================================================
+' ACTIVITY DIAGRAM DESCRIPTION
+' ============================================================
+' Use Case: UC07 - View Analytics Dashboard
+' Actor: User
+' Includes: UC01 - Authenticate User
+' Goal: Display visual analytics of spending patterns and budget status
+'
+' STEPS (mapped to actions in diagram):
+' Step 1: User requests Analytics Dashboard (<<include>> UC01)
+' Step 2: System verifies user is authenticated
+' Step 3: If not authenticated, redirect to Login
+' Step 4: System sets default date range (current month)
+' Step 5: System loads User's FinancialAccount list
+' Step 6: System queries Transaction entities for date range
+' Step 7: System calculates total income
+' Step 8: System calculates total expenses
+' Step 9: System calculates net savings
+' Step 10: System groups Transactions by Category
+' Step 11: System calculates spending per Category
+' Step 12: System loads User's Budget list
+' Step 13: System calculates budget usage percentages
+' Step 14: System compiles dashboard data
+' Step 15: System displays Dashboard with charts
+' Step 16: User views dashboard
+' Step 17: User can filter by date range
+' Step 18: User can filter by FinancialAccount
+' Step 19: User can drill down into Category details
+' Step 20: System updates display based on user selections
+' ============================================================
+
+title Activity Diagram: UC07 - View Analytics Dashboard
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF3E0
+skinparam ActivityDiamondBorderColor #F57C00
+
+|User|
+start
+
+:Request Analytics Dashboard;
+note right
+  Step 1
+  <<include>> UC01
+  Authenticate User
+end note
+
+|System|
+:Verify User Authenticated;
+note right: Step 2
+
+if (Authenticated?) then (yes)
+    :Set Default Date Range (Current Month);
+    note right: Step 4
+    
+    :Load User's FinancialAccount List;
+    note right: Step 5
+    
+    :Query Transactions for Date Range;
+    note right: Step 6
+    
+    :Calculate Total Income;
+    note right: Step 7
+    
+    :Calculate Total Expenses;
+    note right: Step 8
+    
+    :Calculate Net Savings;
+    note right: Step 9
+    
+    :Group Transactions by Category;
+    note right: Step 10
+    
+    :Calculate Spending per Category;
+    note right: Step 11
+    
+    :Load User's Budget List;
+    note right: Step 12
+    
+    :Calculate Budget Usage Percentages;
+    note right: Step 13
+    
+    :Compile Dashboard Data;
+    note right: Step 14
+    
+    :Display Dashboard;
+    note right: Step 15
+    
+    |User|
+    :View Dashboard;
+    note right: Step 16
+    
+    while (User Interacts?) is (yes)
+        :Select Interaction;
+        
+        switch (Interaction Type?)
+        
+        case (Change Date Range)
+            :Select New Date Range;
+            note right: Step 17
+            
+            |System|
+            :Reload Data for New Range;
+            :Update Dashboard Display;
+            note right: Step 20
+            
+        case (Filter by Account)
+            |User|
+            :Select FinancialAccount(s);
+            note right: Step 18
+            
+            |System|
+            :Filter Transactions;
+            :Update Dashboard Display;
+            
+        case (View Category Details)
+            |User|
+            :Select Category;
+            note right: Step 19
+            
+            |System|
+            :Load Category Transactions;
+            :Display Transaction List;
+            
+        endswitch
+        
+        |User|
+        :View Updated Dashboard;
+        
+    endwhile (no)
+    
+    stop
+    
+else (no)
+    :Redirect to Login;
+    note right: Step 3
+    stop
+endif
+
+@enduml

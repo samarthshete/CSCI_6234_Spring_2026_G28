@@ -1,0 +1,161 @@
+@startuml Import_Transactions_Activity
+
+' ============================================================
+' ACTIVITY DIAGRAM DESCRIPTION
+' ============================================================
+' Use Case: UC03 - Import Transactions
+' Actors: User, External Banking System
+' Includes: UC01 - Authenticate User, UC04 - Categorize Expenses
+' Goal: Import transaction records from external bank or CSV file
+'
+' STEPS (mapped to actions in diagram):
+' Step 1: User requests Import Transactions (<<include>> UC01)
+' Step 2: System verifies user is authenticated
+' Step 3: If not authenticated, redirect to Login
+' Step 4: System loads User's FinancialAccount list
+' Step 5: System displays Import Screen
+' Step 6: User selects target FinancialAccount
+' Step 7: User selects import method (Bank Sync or CSV)
+' Step 8 (Bank): System connects to External Banking System
+' Step 9 (Bank): External Banking System authenticates and returns data
+' Step 10 (Bank): If connection fails, display error
+' Step 11 (CSV): User uploads CSV file
+' Step 12 (CSV): System validates and parses file
+' Step 13 (CSV): If format invalid, display error
+' Step 14: System displays transaction preview
+' Step 15: User confirms import
+' Step 16: System checks for duplicate transactions
+' Step 17: System creates Transaction entities for unique records
+' Step 18: System triggers categorization (<<include>> UC04)
+' Step 19: System displays import summary
+' ============================================================
+
+title Activity Diagram: UC03 - Import Transactions
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF3E0
+skinparam ActivityDiamondBorderColor #F57C00
+
+|User|
+start
+
+:Request Import Transactions;
+note right
+  Step 1
+  <<include>> UC01
+  Authenticate User
+end note
+
+|System|
+:Verify User Authenticated;
+note right: Step 2
+
+if (Authenticated?) then (yes)
+    :Load User's FinancialAccount List;
+    note right: Step 4
+    
+    :Display Import Screen;
+    note right: Step 5
+    
+    |User|
+    :Select Target FinancialAccount;
+    note right: Step 6
+    
+    :Select Import Method;
+    note right: Step 7
+    
+    switch (Import Method?)
+    
+    case (Bank Sync)
+        |System|
+        :Connect to External Banking System;
+        note right: Step 8
+        
+        |External Banking System|
+        :Authenticate Request;
+        
+        if (Connection Success?) then (yes)
+            :Return Transaction Data;
+            note right: Step 9
+            
+            |System|
+            :Receive Transaction Data;
+            
+        else (no)
+            |System|
+            :Display Connection Error;
+            note right: Step 10
+            stop
+        endif
+        
+    case (CSV Upload)
+        |User|
+        :Select and Upload CSV File;
+        note right: Step 11
+        
+        |System|
+        :Validate File Format;
+        note right: Step 12
+        
+        if (Format Valid?) then (yes)
+            :Parse CSV Contents;
+            :Map Columns to Fields;
+        else (no)
+            :Display Format Error;
+            note right: Step 13
+            stop
+        endif
+        
+    endswitch
+    
+    |System|
+    :Display Transaction Preview;
+    note right: Step 14
+    
+    |User|
+    if (Confirm Import?) then (yes)
+        note right: Step 15
+        
+        |System|
+        :Check for Duplicate Transactions;
+        note right: Step 16
+        
+        :Filter Unique Transactions;
+        
+        while (More Unique Transactions?) is (yes)
+            :Create Transaction Entity;
+            note right: Step 17
+            
+            :Link to FinancialAccount;
+        endwhile (no)
+        
+        :Trigger Categorization;
+        note right
+          Step 18
+          <<include>> UC04
+          Categorize Expenses
+        end note
+        
+        :Display Import Summary;
+        note right: Step 19
+        
+        |User|
+        :View Import Results;
+        
+        stop
+        
+    else (no)
+        :Cancel Import;
+        stop
+    endif
+    
+else (no)
+    :Redirect to Login;
+    note right: Step 3
+    stop
+endif
+
+@enduml

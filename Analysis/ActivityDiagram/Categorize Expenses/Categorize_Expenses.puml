@@ -1,0 +1,104 @@
+@startuml Categorize_Expenses_Activity
+
+' ============================================================
+' ACTIVITY DIAGRAM DESCRIPTION
+' ============================================================
+' Use Case: UC04 - Categorize Expenses
+' Actors: System (automatic), User (for manual categorization)
+' Goal: Assign spending Category to Transaction entities
+'
+' STEPS (mapped to actions in diagram):
+' Step 1: System receives uncategorized Transaction(s)
+' Step 2: System loads available Category list
+' Step 3: For each uncategorized Transaction:
+' Step 4: System extracts transaction details (description, Merchant, amount)
+' Step 5: System checks if Merchant has a default Category assigned
+' Step 6: If Merchant has default Category, assign it to Transaction
+' Step 7: If no Merchant match, check description for keyword patterns
+' Step 8: If keyword matches a Category, assign it to Transaction
+' Step 9: If no automatic match found, flag Transaction for manual review
+' Step 10: System displays Transaction to User with Category options
+' Step 11: User reviews Transaction and selects appropriate Category
+' Step 12: System assigns user-selected Category to Transaction
+' Step 13: System saves updated Transaction entity
+' Step 14: Process next Transaction
+' Step 15: All Transactions categorized - process complete
+' ============================================================
+
+title Activity Diagram: UC04 - Categorize Expenses
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF3E0
+skinparam ActivityDiamondBorderColor #F57C00
+
+|System|
+start
+
+:Receive Uncategorized Transactions;
+note right: Step 1
+
+:Load Category List;
+note right: Step 2
+
+while (More Uncategorized Transactions?) is (yes)
+    note right: Step 3
+    
+    :Get Next Transaction;
+    
+    :Extract Transaction Details;
+    note right
+      Step 4
+      - Description
+      - Merchant
+      - Amount
+    end note
+    
+    :Check Merchant Default Category;
+    note right: Step 5
+    
+    if (Merchant Has Default Category?) then (yes)
+        :Assign Merchant Default Category;
+        note right: Step 6
+        
+    else (no)
+        :Check Description Keywords;
+        note right: Step 7
+        
+        if (Keyword Match Found?) then (yes)
+            :Assign Matched Category;
+            note right: Step 8
+            
+        else (no)
+            :Flag for Manual Review;
+            note right: Step 9
+            
+            :Display Transaction with Category Options;
+            note right: Step 10
+            
+            |User|
+            :Review Transaction Details;
+            
+            :Select Category;
+            note right: Step 11
+            
+            |System|
+            :Assign User Selected Category;
+            note right: Step 12
+        endif
+    endif
+    
+    :Save Updated Transaction;
+    note right: Step 13
+    
+    note right: Step 14
+endwhile (no)
+
+:Categorization Complete;
+note right: Step 15
+
+stop
+
+@enduml

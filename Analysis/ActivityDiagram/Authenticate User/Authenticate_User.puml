@@ -1,0 +1,88 @@
+@startuml Authenticate_User_Activity
+
+' ============================================================
+' ACTIVITY DIAGRAM DESCRIPTION
+' ============================================================
+' Use Case: UC01 - Authenticate User
+' Actor: User
+' Goal: Verify user identity and grant access to the system
+'
+' STEPS (mapped to actions in diagram):
+' Step 1: User opens the application
+' Step 2: System displays the Login Form
+' Step 3: User enters email address
+' Step 4: User enters password
+' Step 5: User submits credentials
+' Step 6: System validates credential format
+' Step 7: If format invalid, display error and user re-enters credentials
+' Step 8: System verifies credentials against User entity
+' Step 9: If credentials invalid, display error and user re-enters credentials
+' Step 10: System grants access and redirects to Dashboard
+' Step 11: Authentication complete
+' ============================================================
+
+title Activity Diagram: UC01 - Authenticate User
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF3E0
+skinparam ActivityDiamondBorderColor #F57C00
+
+|User|
+start
+
+:Open Application;
+note right: Step 1
+
+|System|
+:Display Login Form;
+note right: Step 2
+
+|User|
+repeat
+    :Enter Email Address;
+    note right: Step 3
+    
+    :Enter Password;
+    note right: Step 4
+    
+    :Submit Credentials;
+    note right: Step 5
+    
+    |System|
+    :Validate Credential Format;
+    note right: Step 6
+    
+    if (Format Valid?) then (yes)
+        :Verify Credentials Against User;
+        note right: Step 8
+        
+        if (Credentials Valid?) then (yes)
+            :Grant Access;
+            note right: Step 10
+            
+            :Redirect to Dashboard;
+            
+            |User|
+            :Access Dashboard;
+            note right: Step 11
+            
+            stop
+        else (no)
+            :Display Invalid Credentials Error;
+            note right: Step 9
+        endif
+    else (no)
+        :Display Format Error;
+        note right: Step 7
+    endif
+    
+    |User|
+repeat while (Try Again?) is (yes)
+
+:Exit Application;
+stop
+
+@enduml
