@@ -1,0 +1,35 @@
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+backend/.venv/
+backend/.pytest_cache/
+.pytest_cache/
+
+# ─── Node / Next.js ───
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# ─── Environment files ───
+.env
+.env.*
+!.env.example
+
+# ─── OS junk ───
+.DS_Store
+Thumbs.db
+
+# ─── Build artifacts ───
+dist/
+build/
+coverage/
+*.log
+
+# ─── IDE ───
+.vscode/
+.idea/
+*.swp
+*.swo
