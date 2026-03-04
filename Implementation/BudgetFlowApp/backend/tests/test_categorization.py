@@ -6,6 +6,8 @@ import uuid
 import pytest
 from httpx import AsyncClient
 
+from tests.conftest import run_worker_until_done
+
 API_ACCOUNTS = "/api/v1/accounts"
 API_CATEGORIES = "/api/v1/categories"
 API_TRANSACTIONS = "/api/v1/transactions"
@@ -38,6 +40,7 @@ async def _import_transactions(client: AsyncClient, headers: dict, acct_id: str,
         headers=headers,
     )
     assert resp.status_code == 202
+    await run_worker_until_done()
     return resp.json()
 
 

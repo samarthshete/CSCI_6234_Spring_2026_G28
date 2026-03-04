@@ -1,0 +1,20 @@
+@startuml
+title Manage Accounts - Sequence Diagram
+
+actor "User" as A
+boundary "Accounts UI" as UI
+control "AccountService" as ACS
+entity "FinancialAccount" as FA
+
+A -> UI: submitAccountChanges(accountId, nickname, isActive)
+UI -> ACS: manageAccount(userId, accountId, nickname, isActive)
+
+ACS -> FA: getById(accountId)
+FA --> ACS: account
+
+ACS -> ACS: validateOwnership(userId, account)
+ACS -> FA: updateDetails(nickname, isActive)
+
+ACS --> UI: showAccount(accountId)
+
+@enduml

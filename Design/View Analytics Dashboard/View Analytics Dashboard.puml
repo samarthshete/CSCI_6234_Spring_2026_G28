@@ -1,0 +1,22 @@
+@startuml
+title View Analytics Dashboard - Sequence Diagram
+
+actor "User" as A
+boundary "Analytics UI" as UI
+control "AnalyticsService" as ANS
+entity "Transaction" as T
+entity "Budget" as B
+
+A -> UI: openDashboard(period)
+UI -> ANS: loadDashboard(userId, period)
+
+ANS -> T: listByUser(userId, period)
+T --> ANS: txns[]
+
+ANS -> ANS: summarizeByCategory(txns)
+ANS -> B: getBudgetStatus(userId, period)
+B --> ANS: budgetStatus
+
+ANS --> UI: renderDashboard(spendingSummary, budgetStatus)
+
+@enduml

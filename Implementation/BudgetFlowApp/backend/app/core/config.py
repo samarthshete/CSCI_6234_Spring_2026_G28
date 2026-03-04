@@ -15,6 +15,18 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "budgetflow_db"
     POSTGRES_PORT: str = "5432"
 
+    S3_ENDPOINT_URL: str = "http://localhost:9000"
+    S3_ACCESS_KEY: str = "minioadmin"
+    S3_SECRET_KEY: str = "minioadmin"
+    S3_BUCKET: str = "budgetflow-reports"
+    S3_REGION: str = "us-east-1"
+    S3_USE_SSL: bool = False
+
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: Optional[str] = None
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    ADVISOR_ENABLED: bool = True
+
     @property
     def effective_database_url(self) -> str:
         if self.DATABASE_URL:

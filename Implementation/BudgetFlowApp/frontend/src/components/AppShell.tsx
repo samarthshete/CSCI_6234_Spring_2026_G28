@@ -13,6 +13,11 @@ const nav = [
   { href: "/categories", label: "Categories", icon: "⊞" },
   { href: "/budgets", label: "Budgets", icon: "◎" },
   { href: "/analytics", label: "Analytics", icon: "◔" },
+  { href: "/alerts", label: "Alerts", icon: "◇" },
+  { href: "/reports", label: "Reports", icon: "⊜" },
+  { href: "/jobs", label: "Jobs", icon: "⚙" },
+  { href: "/advisor", label: "Advisor", icon: "◈" },
+  { href: "/recommendations", label: "Invest", icon: "▲" },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

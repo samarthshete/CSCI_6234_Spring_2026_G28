@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
-from app.api.v1 import auth, accounts, institutions, transactions, categories, budgets, alerts, analytics
+from app.api.v1 import auth, accounts, institutions, transactions, categories, budgets, alerts, analytics, reports, advisor, recommendations, jobs
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -27,6 +27,10 @@ app.include_router(categories.router, prefix=f"{settings.API_V1_STR}/categories"
 app.include_router(budgets.router, prefix=f"{settings.API_V1_STR}/budgets", tags=["budgets"])
 app.include_router(alerts.router, prefix=f"{settings.API_V1_STR}/alerts", tags=["alerts"])
 app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
+app.include_router(reports.router, prefix=f"{settings.API_V1_STR}/reports", tags=["reports"])
+app.include_router(advisor.router, prefix=f"{settings.API_V1_STR}/advisor", tags=["advisor"])
+app.include_router(recommendations.router, prefix=f"{settings.API_V1_STR}/recommendations", tags=["recommendations"])
+app.include_router(jobs.router, prefix=f"{settings.API_V1_STR}/jobs", tags=["jobs"])
 
 
 @app.get("/health")

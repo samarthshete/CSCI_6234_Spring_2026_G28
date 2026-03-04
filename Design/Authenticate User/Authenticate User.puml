@@ -1,0 +1,24 @@
+@startuml
+title Authenticate User - Sequence Diagram
+
+actor "User" as A
+boundary "Authenticate UI" as UI
+control "AuthService" as AS
+entity "User" as U
+
+A -> UI: enterCredentials(email, password)
+UI -> AS: login(email, password)
+
+AS -> AS: normalizeEmail(email)
+AS -> U: findByEmail(email)
+U --> AS: user / null
+
+alt user not found
+  AS --> UI: showLoginResult(false)
+else user found
+  AS -> U: verifyPassword(password)
+  U --> AS: isValid
+  AS --> UI: showLoginResult(isValid)
+end
+
+@enduml

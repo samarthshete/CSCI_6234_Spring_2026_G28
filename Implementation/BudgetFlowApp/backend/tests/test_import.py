@@ -1,10 +1,12 @@
-"""UC03 Import Transactions: CSV import, dedup, user isolation."""
+"""UC03 Import Transactions: CSV import, dedup, user isolation. Async via UC09 worker."""
 
 import uuid
 import io
 
 import pytest
 from httpx import AsyncClient
+
+from tests.conftest import run_worker_until_done
 
 API_ACCOUNTS = "/api/v1/accounts"
 API_IMPORT = "/api/v1/transactions/import"
@@ -43,15 +45,24 @@ async def test_csv_import_happy_path(async_client: AsyncClient):
     )
     assert resp.status_code == 202
     body = resp.json()
-    assert body["status"] == "completed"
-    assert body["total_rows"] == 2
-    assert body["imported_count"] == 2
-    assert body["duplicate_count"] == 0
-    assert body["failed_count"] == 0
+    assert body["status"] == "queued"
+    assert body["job_id"] is not None
+    assert body["import_session_id"] is not None
 
-    sess_resp = await async_client.get(API_SESSIONS, headers=headers)
+    await run_worker_until_done()
+
+    sess_resp = await async_client.get(f"{API_SESSIONS}/{body['import_session_id']}", headers=headers)
     assert sess_resp.status_code == 200
-    assert len(sess_resp.json()) == 1
+    session = sess_resp.json()
+    assert session["status"] == "completed"
+    assert session["total_rows"] == 2
+    assert session["imported_count"] == 2
+    assert session["duplicate_count"] == 0
+    assert session["failed_count"] == 0
+
+    list_resp = await async_client.get(API_SESSIONS, headers=headers)
+    assert list_resp.status_code == 200
+    assert len(list_resp.json()) == 1
 
 
 @pytest.mark.asyncio
@@ -100,13 +111,17 @@ async def test_csv_import_duplicate_detection(async_client: AsyncClient):
         API_IMPORT, data={"account_id": acct_id}, files=_csv_file(one_row, "a.csv"), headers=headers,
     )
     assert r1.status_code == 202
-    assert r1.json()["imported_count"] == 1
+    await run_worker_until_done()
+    sess1 = await async_client.get(f"{API_SESSIONS}/{r1.json()['import_session_id']}", headers=headers)
+    assert sess1.json()["imported_count"] == 1
 
     r2 = await async_client.post(
         API_IMPORT, data={"account_id": acct_id}, files=_csv_file(one_row, "b.csv"), headers=headers,
     )
     assert r2.status_code == 202
-    body = r2.json()
+    await run_worker_until_done()
+    sess2 = await async_client.get(f"{API_SESSIONS}/{r2.json()['import_session_id']}", headers=headers)
+    body = sess2.json()
     assert body["imported_count"] == 0
     assert body["duplicate_count"] == 1
 
@@ -122,6 +137,7 @@ async def test_list_sessions_user_isolated(async_client: AsyncClient):
     await async_client.post(
         API_IMPORT, data={"account_id": acct_a}, files=_csv_file(GOOD_CSV), headers=headers_a,
     )
+    await run_worker_until_done()
 
     resp_a = await async_client.get(API_SESSIONS, headers=headers_a)
     assert resp_a.status_code == 200

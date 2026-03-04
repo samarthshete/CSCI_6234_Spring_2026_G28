@@ -1,0 +1,33 @@
+@startuml
+title Receive Budget Alerts - Sequence Diagram
+
+actor "Scheduler" as S
+control "AlertService" as ALS
+entity "Budget" as B
+entity "BudgetItem" as BI
+entity "BudgetAlert" as BA
+
+S -> ALS: evaluateBudgets(today)
+
+ALS -> B: getActiveBudgets(today)
+B --> ALS: budgets[]
+
+loop each budget
+  ALS -> B: listItems()
+  B --> ALS: items[]
+
+  loop each item
+    ALS -> BI: calculateSpent(today)
+    BI --> ALS: spentAmount
+    ALS -> BI: isThresholdBreached(spentAmount)
+    BI --> ALS: breached?
+
+    alt breached
+      ALS -> BA: create(budget.budgetId, item.budgetItemId, spentAmount)
+      BA --> ALS: alert
+      ALS -> ALS: notifyUser(alert)
+    end
+  end
+end
+
+@enduml

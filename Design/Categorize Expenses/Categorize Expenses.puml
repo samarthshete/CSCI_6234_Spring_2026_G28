@@ -1,0 +1,24 @@
+@startuml
+title Categorize Expenses - Sequence Diagram
+
+actor "User" as A
+boundary "Category UI" as UI
+control "CategorizationService" as CS
+entity "Transaction" as T
+entity "Category" as C
+
+A -> UI: chooseAutoCategorize(accountId)
+UI -> CS: categorizeExpenses(userId, accountId)
+
+CS -> CS: getUncategorizedTransactions(accountId)
+CS --> CS: txns[]
+
+loop each txn
+  CS -> C: suggestCategory(txn)
+  C --> CS: category
+  CS -> txn: assignCategory(category)
+end
+
+CS --> UI: showCategorizationResult(updatedCount)
+
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+title Import Transactions - Sequence Diagram
+
+actor "User" as A
+boundary "Import UI" as UI
+control "TransactionImportService" as TIS
+entity "FinancialAccount" as FA
+entity "Transaction" as T
+
+A -> UI: uploadFile(accountId, file)
+UI -> TIS: importTransactions(userId, accountId, file)
+
+TIS -> FA: getById(accountId)
+FA --> TIS: account
+
+TIS -> TIS: validateOwnership(userId, account)
+TIS -> TIS: parseCsv(file)
+TIS --> TIS: rows[]
+
+loop each row
+  TIS -> T: create(postedDate, amount, description)
+  T --> TIS: txn
+  TIS -> FA: addTransaction(txn)
+end
+
+TIS --> UI: showImportSummary(importedCount)
+
+@enduml

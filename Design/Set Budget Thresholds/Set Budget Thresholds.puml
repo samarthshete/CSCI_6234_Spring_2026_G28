@@ -1,0 +1,25 @@
+@startuml
+title Set Budget Thresholds - Sequence Diagram
+
+actor "User" as A
+boundary "Budget UI" as UI
+control "BudgetService" as BS
+entity "Budget" as B
+entity "BudgetItem" as BI
+
+A -> UI: submitBudget(periodStart, periodEnd, items)
+UI -> BS: setBudgetThresholds(userId, periodStart, periodEnd, items)
+
+BS -> B: findOrCreate(userId, periodStart, periodEnd)
+B --> BS: budget
+
+loop each item(categoryId, limitAmount)
+  BS -> BI: findOrCreate(budget, categoryId)
+  BI --> BS: budgetItem
+  BS -> BI: setLimit(limitAmount)
+  BS -> B: addOrUpdateItem(budgetItem)
+end
+
+BS --> UI: showBudgetSaved(budget.budgetId)
+
+@enduml

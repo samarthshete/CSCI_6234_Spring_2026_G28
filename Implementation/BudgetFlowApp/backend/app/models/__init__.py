@@ -5,3 +5,7 @@ from .import_session import ImportSession
 from .category import Category
 from .budget import Budget, BudgetItem
 from .alert import BudgetAlert
+from .report import Report
+from .chat import ChatSession, ChatMessage
+from .recommendation import RiskProfile, RecommendationRun, RecommendationItem
+from .job import Job

@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Optional, List
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class TransactionRead(BaseModel):
@@ -40,3 +40,17 @@ class ImportSessionRead(BaseModel):
     completed_at: Optional[datetime] = None
     row_errors: Optional[List[RowError]] = None
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def extract_row_errors(cls, data, handler):
+        obj = handler(data)
+        if hasattr(data, "metadata_json") and data.metadata_json and "row_errors" in data.metadata_json:
+            obj.row_errors = [RowError(**e) for e in data.metadata_json["row_errors"]]
+        return obj
+
+
+class ImportQueuedResponse(BaseModel):
+    import_session_id: uuid.UUID
+    job_id: uuid.UUID
+    status: str = "queued"
