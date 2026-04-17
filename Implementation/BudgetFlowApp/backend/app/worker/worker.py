@@ -9,7 +9,6 @@ import traceback
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -44,15 +43,7 @@ def _get_storage():
 
 
 async def _fetch_pending_jobs(session: AsyncSession) -> list[Job]:
-    stmt = (
-        select(Job)
-        .where(Job.status == "pending")
-        .order_by(Job.created_at.asc())
-        .limit(BATCH_SIZE)
-        .with_for_update(skip_locked=True)
-    )
-    result = await session.execute(stmt)
-    jobs = list(result.scalars().unique().all())
+    jobs = await job_service.claim_pending_jobs(session, BATCH_SIZE)
     if jobs:
         _log_event("worker.claim_batch", count=len(jobs))
     return jobs
@@ -61,28 +52,30 @@ async def _fetch_pending_jobs(session: AsyncSession) -> list[Job]:
 async def _execute_job(session: AsyncSession, job: Job, storage) -> bool:
     """Execute one job. Returns True if a job was processed."""
     job_id_str = str(job.id)
-    handler = get_handler(job.type)
+    job_type = job.type
+    handler = get_handler(job_type)
     if not handler:
-        _log_event("worker.job_failed", job_id=job_id_str, job_type=job.type, reason="unknown_job_type")
+        _log_event("worker.job_failed", job_id=job_id_str, job_type=job_type, reason="unknown_job_type")
         await job_service.mark_failed(
             session,
             job,
-            error_message=f"Unknown job type: {job.type}",
+            error_message=f"Unknown job type: {job_type}",
         )
         return True
 
-    await job_service.mark_running(session, job)
-    _log_event("worker.job_claimed", job_id=job_id_str, job_type=job.type)
-    _log_event("worker.job_started", job_id=job_id_str, job_type=job.type)
+    _log_event("worker.job_claimed", job_id=job_id_str, job_type=job_type)
+    _log_event("worker.job_started", job_id=job_id_str, job_type=job_type)
 
     try:
         result = await handler(session, job, storage)
         await job_service.mark_succeeded(session, job, result)
-        _log_event("worker.job_succeeded", job_id=job_id_str, job_type=job.type)
+        _log_event("worker.job_succeeded", job_id=job_id_str, job_type=job_type)
         return True
     except Exception as exc:
-        _log_event("worker.job_failed", job_id=job_id_str, job_type=job.type, error=str(exc)[:500])
+        _log_event("worker.job_failed", job_id=job_id_str, job_type=job_type, error=str(exc)[:500])
         logger.exception("Worker job execution exception")
+        # Ensure the failed TX is cleaned up before writing failed status.
+        await session.rollback()
         await job_service.mark_failed(
             session,
             job,
@@ -107,12 +100,14 @@ async def run_once(
     storage = storage or _get_storage()
     factory: Any = session_factory or AsyncSessionLocal
     async with factory() as session:
-        jobs = await _fetch_pending_jobs(session)
-        if not jobs:
-            return False
-        for job in jobs:
-            await _execute_job(session, job, storage)
-        return True
+        processed_any = False
+        while True:
+            jobs = await _fetch_pending_jobs(session)
+            if not jobs:
+                return processed_any
+            processed_any = True
+            for job in jobs:
+                await _execute_job(session, job, storage)
 
 
 async def run_loop() -> None:

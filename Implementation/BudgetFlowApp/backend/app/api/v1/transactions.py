@@ -106,8 +106,6 @@ async def import_csv(
         },
     )
     await db.commit()
-    await db.refresh(session)
-    await db.refresh(job)
 
     return ImportQueuedResponse(
         import_session_id=session.id,

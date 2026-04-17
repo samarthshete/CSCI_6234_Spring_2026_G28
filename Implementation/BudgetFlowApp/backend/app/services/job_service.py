@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.job import Job
@@ -23,7 +23,6 @@ async def create_job_in_session(
     job = Job(user_id=user_id, type=job_type, payload=payload or {}, status="pending")
     db.add(job)
     await db.flush()
-    await db.refresh(job)
     return job
 
 
@@ -35,8 +34,37 @@ async def enqueue_job(
 ) -> Job:
     job = await create_job_in_session(db, user_id, job_type, payload)
     await db.commit()
-    await db.refresh(job)
     return job
+
+
+async def claim_pending_jobs(
+    db: AsyncSession,
+    batch_size: int,
+) -> List[Job]:
+    """
+    Atomically claim a FIFO batch of pending jobs in the current transaction.
+    Claimed jobs are marked running before the lock is released.
+    """
+    stmt = (
+        select(Job)
+        .where(Job.status == "pending")
+        .order_by(Job.created_at.asc())
+        .limit(batch_size)
+        .with_for_update(skip_locked=True)
+    )
+    result = await db.execute(stmt)
+    jobs = list(result.scalars().unique().all())
+    if not jobs:
+        return []
+
+    now = datetime.now(timezone.utc)
+    for job in jobs:
+        job.status = "running"
+        if job.started_at is None:
+            job.started_at = now
+        job.updated_at = now
+    await db.flush()
+    return jobs
 
 
 async def get_job(db: AsyncSession, user_id: uuid.UUID, job_id: uuid.UUID) -> Job:
@@ -75,22 +103,34 @@ async def list_jobs(
 
 
 async def mark_running(db: AsyncSession, job: Job) -> None:
-    job.status = "running"
-    job.started_at = datetime.now(timezone.utc)
-    job.updated_at = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    await db.execute(
+        update(Job)
+        .where(Job.id == job.id)
+        .values(
+            status="running",
+            started_at=now,
+            updated_at=now,
+        )
+    )
     await db.commit()
-    await db.refresh(job)
 
 
 async def mark_succeeded(db: AsyncSession, job: Job, result: Optional[dict] = None) -> None:
-    job.status = "succeeded"
-    job.result = result
-    job.finished_at = datetime.now(timezone.utc)
-    job.updated_at = datetime.now(timezone.utc)
-    job.error_message = None
-    job.error_trace = None
+    now = datetime.now(timezone.utc)
+    await db.execute(
+        update(Job)
+        .where(Job.id == job.id)
+        .values(
+            status="succeeded",
+            result=result,
+            finished_at=now,
+            updated_at=now,
+            error_message=None,
+            error_trace=None,
+        )
+    )
     await db.commit()
-    await db.refresh(job)
 
 
 async def mark_failed(
@@ -99,10 +139,16 @@ async def mark_failed(
     error_message: str,
     error_trace: Optional[str] = None,
 ) -> None:
-    job.status = "failed"
-    job.error_message = (error_message or "")[:2000]
-    job.error_trace = (error_trace or "")[:5000] if error_trace else None
-    job.finished_at = datetime.now(timezone.utc)
-    job.updated_at = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    await db.execute(
+        update(Job)
+        .where(Job.id == job.id)
+        .values(
+            status="failed",
+            error_message=(error_message or "")[:2000],
+            error_trace=(error_trace or "")[:5000] if error_trace else None,
+            finished_at=now,
+            updated_at=now,
+        )
+    )
     await db.commit()
-    await db.refresh(job)

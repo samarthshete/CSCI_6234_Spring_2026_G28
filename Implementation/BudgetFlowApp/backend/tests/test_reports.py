@@ -2,11 +2,9 @@ import uuid
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from app.main import app
-from app.core.config import settings
 from app.core.database import get_db
 from app.core import security
 from app.models.user import User
@@ -23,6 +21,7 @@ def _override_storage():
 
 
 async def _run_worker_until_done(db: AsyncSession, max_iterations: int = 10) -> None:
+    await db.rollback()
     factory = async_sessionmaker(
         bind=db.bind,
         class_=AsyncSession,
@@ -35,12 +34,10 @@ async def _run_worker_until_done(db: AsyncSession, max_iterations: int = 10) -> 
 
 
 @pytest_asyncio.fixture(scope="function")
-async def db():
-    engine = create_async_engine(settings.effective_database_url, echo=False, poolclass=NullPool)
-    session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+async def db(test_engine):
+    session_factory = async_sessionmaker(bind=test_engine, class_=AsyncSession, expire_on_commit=False)
     async with session_factory() as session:
         yield session
-    await engine.dispose()
 
 
 async def _create_user(db: AsyncSession, email: str, name: str = "Test") -> User:
