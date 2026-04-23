@@ -20,7 +20,7 @@ A comprehensive personal finance management system demonstrating Object-Oriented
 
 ---
 
-## 🔗 Supplementary materials
+## 🔗 Demo Video
 
 - [Google Drive file](https://drive.google.com/file/d/1a0YvFUbDRpxIBNqCCTGTgKncSaC7zoC5/view?usp=sharing)
 
